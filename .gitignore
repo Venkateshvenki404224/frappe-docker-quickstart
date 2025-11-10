@@ -1,0 +1,34 @@
+# Environment
+.env
+.env.local
+
+# Docker
+*.log
+
+# Backups
+backups/
+*.sql
+*.sql.gz
+*.tar
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated
+templates/generated/
+apps.json
+
+# Docker volumes (local data)
+sites/
+db-data/
+redis-queue-data/
+redis-cache-data/
+logs/
