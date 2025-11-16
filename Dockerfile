@@ -1,60 +1,59 @@
 ARG FRAPPE_BRANCH=version-15
+
+FROM frappe/build:${FRAPPE_BRANCH} AS builder
+
+ARG FRAPPE_BRANCH=version-15
 ARG FRAPPE_PATH=https://github.com/frappe/frappe
-ARG APPS_JSON_BASE64=W10=
-
-FROM frappe/bench:latest AS builder
-
-ARG FRAPPE_BRANCH
-ARG FRAPPE_PATH
 ARG APPS_JSON_BASE64
 
-USER frappe
+USER root
 
-# Install frappe
-RUN bench init \
-  --frappe-branch=${FRAPPE_BRANCH} \
-  --frappe-path=${FRAPPE_PATH} \
-  --no-procfile \
-  --no-backups \
-  --skip-redis-config-generation \
-  --verbose \
-  /home/frappe/frappe-bench
+RUN mkdir -p /home/frappe/.ssh && \
+  chown -R frappe:frappe /home/frappe/.ssh
 
-WORKDIR /home/frappe/frappe-bench
+RUN mkdir /opt/backups && \
+  chown -R frappe:frappe /opt/backups
 
-# Decode and install apps from apps.json
-RUN if [ -n "${APPS_JSON_BASE64}" ] && [ "${APPS_JSON_BASE64}" != "W10=" ]; then \
-  echo "${APPS_JSON_BASE64}" | base64 -d > /tmp/apps.json && \
-  cat /tmp/apps.json && \
-  for app in $(cat /tmp/apps.json | jq -r '.[] | @base64'); do \
-    _jq() { echo ${app} | base64 -d | jq -r ${1}; }; \
-    APP_URL=$(_jq '.url'); \
-    APP_BRANCH=$(_jq '.branch // "version-15"'); \
-    echo "Installing app from ${APP_URL} (branch: ${APP_BRANCH})"; \
-    bench get-app --branch=${APP_BRANCH} ${APP_URL}; \
-  done; \
-fi
-
-# Remove .git directories to reduce image size
-RUN find apps -name ".git" -exec rm -rf {} + || true
-
-FROM frappe/base:${FRAPPE_BRANCH}
+RUN if [ -n "${APPS_JSON_BASE64}" ]; then \
+    mkdir /opt/frappe && echo "${APPS_JSON_BASE64}" | base64 -d > /opt/frappe/apps.json; \
+  fi
 
 USER frappe
 
-# Copy bench from builder
+RUN export APP_INSTALL_ARGS="" && \
+  if [ -n "${APPS_JSON_BASE64}" ]; then \
+    export APP_INSTALL_ARGS="--apps_path=/opt/frappe/apps.json"; \
+  fi && \
+  bench init ${APP_INSTALL_ARGS}\
+    --frappe-branch=${FRAPPE_BRANCH} \
+    --frappe-path=${FRAPPE_PATH} \
+    --no-procfile \
+    --no-backups \
+    --skip-redis-config-generation \
+    --verbose \
+    /home/frappe/frappe-bench && \
+  cd /home/frappe/frappe-bench && \
+  echo "{}" > sites/common_site_config.json && \
+  find apps -mindepth 1 -path "*/.git" | xargs rm -fr
+
+FROM frappe/base:${FRAPPE_BRANCH} AS backend
+
+USER frappe
+
 COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench /home/frappe/frappe-bench
+COPY --from=builder --chown=frappe:frappe /home/frappe/.ssh /home/frappe/.ssh
 
 WORKDIR /home/frappe/frappe-bench
 
-# Set up volumes and default command
 VOLUME [ \
   "/home/frappe/frappe-bench/sites", \
+  "/home/frappe/frappe-bench/sites/assets", \
   "/home/frappe/frappe-bench/logs" \
 ]
 
 CMD [ \
   "/home/frappe/frappe-bench/env/bin/gunicorn", \
+  "--chdir=/home/frappe/frappe-bench/sites", \
   "--bind=0.0.0.0:8000", \
   "--threads=4", \
   "--workers=2", \

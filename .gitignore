@@ -26,9 +26,21 @@ Thumbs.db
 templates/generated/
 apps.json
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # Docker volumes (local data)
 sites/
 db-data/
 redis-queue-data/
 redis-cache-data/
 logs/
+
+
+## LLM
+.claude/
+CLAUDE.md
