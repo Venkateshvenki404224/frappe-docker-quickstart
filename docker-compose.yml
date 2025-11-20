@@ -273,6 +273,7 @@ volumes:
   redis-queue-data:
   sites:
   logs:
+  apps:
 
 networks:
   frappe_network:
