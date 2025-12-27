@@ -39,6 +39,7 @@ db-data/
 redis-queue-data/
 redis-cache-data/
 logs/
+apps/
 
 
 ## LLM

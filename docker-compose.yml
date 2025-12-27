@@ -7,7 +7,7 @@ services:
         condition: on-failure
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -45,7 +45,7 @@ services:
       SOCKETIO_PORT: "9000"
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -58,7 +58,7 @@ services:
         condition: none
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -153,7 +153,7 @@ services:
       CLIENT_MAX_BODY_SIZE: 50m
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -178,7 +178,7 @@ services:
         condition: on-failure
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -199,7 +199,7 @@ services:
         condition: on-failure
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -240,7 +240,7 @@ services:
         condition: on-failure
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -259,7 +259,7 @@ services:
         condition: on-failure
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - apps:/home/frappe/frappe-bench/apps
+      - ./apps:/home/frappe/frappe-bench/apps
       - logs:/home/frappe/frappe-bench/logs
     networks:
       - frappe_network
@@ -273,7 +273,6 @@ volumes:
   redis-queue-data:
   sites:
   logs:
-  apps:
 
 networks:
   frappe_network:

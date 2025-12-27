@@ -573,6 +573,148 @@ EOF
 python start.py --preset custom --frappe-version version-15
 ```
 
+## Development Mode - Working with Apps
+
+### Git Operations on Apps
+
+Apps are now mounted as volumes from your host machine (`./apps/` directory), which means:
+- ✅ Full git operations (commit, branch, pull, push) work inside containers
+- ✅ Code changes are immediately visible (no rebuild needed)
+- ✅ Use any IDE on your host to edit app code
+
+**Apps location**: `./apps/` directory in your project root
+
+**Available apps**:
+- `./apps/frappe/` - Frappe framework
+- `./apps/nano_press/` - Your custom apps (from preset)
+
+### Making Changes to Apps
+
+**Option 1: Edit on Host (Recommended)**
+```bash
+# Use your favorite IDE/editor on host
+cd apps/nano_press
+# Make changes to code
+git add .
+git commit -m "Your changes"
+git push origin ui-changes
+```
+
+**Option 2: Edit in Container**
+```bash
+# Enter container
+docker exec -it frappe_quickstart_backend bash
+
+# Navigate to app
+cd /home/frappe/frappe-bench/apps/nano_press
+
+# Make changes and commit
+git add .
+git commit -m "Your changes"
+git push origin ui-changes
+```
+
+### Working with Branches
+
+```bash
+# From host
+cd apps/nano_press
+git checkout -b new-feature
+# Make changes
+git add .
+git commit -m "Add new feature"
+git push origin new-feature
+```
+
+### Adding New Apps
+
+To add a new app to your development environment:
+
+1. **Clone the app to apps directory**:
+```bash
+cd apps
+git clone https://github.com/username/new-app --branch develop
+cd ..
+```
+
+2. **Install the app in the site**:
+```bash
+docker exec -it frappe_quickstart_backend bench --site frontend install-app new-app
+```
+
+3. **Restart services**:
+```bash
+docker-compose restart backend
+```
+
+### Pulling Latest Changes
+
+```bash
+# From host
+cd apps/nano_press
+git pull origin ui-changes
+
+# Restart services to apply changes
+docker-compose restart backend
+```
+
+### Troubleshooting Development Issues
+
+**Problem**: Changes not reflecting
+**Solution**: Restart the backend service
+```bash
+docker-compose restart backend
+```
+
+**Problem**: Git permission denied
+**Solution**: Configure git credentials in container
+```bash
+docker exec -it frappe_quickstart_backend bash
+git config --global user.name "Your Name"
+git config --global user.email "your@email.com"
+```
+
+**Problem**: Apps folder is empty
+**Solution**: Re-run start.py - it will clone apps if they don't exist
+```bash
+python start.py
+```
+
+### Development Workflow Best Practices
+
+1. **Always work on branches** - Never commit directly to main/master
+2. **Use .gitconfig** - Set up your git identity once:
+   ```bash
+   # From host
+   git config --global user.name "Your Name"
+   git config --global user.email "your@email.com"
+   ```
+3. **Sync regularly** - Pull changes from upstream frequently
+4. **Test in container** - Your changes run in the same environment as production
+5. **Commit often** - Small, focused commits are easier to manage
+
+### App Development Commands
+
+```bash
+# Enter app directory (from host)
+cd apps/nano_press
+
+# View git status
+git status
+
+# Pull latest changes
+git pull
+
+# Install app in site
+docker exec -it frappe_quickstart_backend bench --site frontend install-app nano_press
+
+# Clear cache after changes
+docker exec -it frappe_quickstart_backend bench --site frontend clear-cache
+
+# Run migrations
+docker exec -it frappe_quickstart_backend bench --site frontend migrate
+```
+
 ## Common Development Tasks
 
 ### Reproducing a Bug

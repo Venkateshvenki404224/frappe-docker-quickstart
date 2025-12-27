@@ -282,6 +282,68 @@ def build_docker_image(apps: List[Dict[str, str]], frappe_version: str) -> bool:
         return False
 
 
+def clone_apps_to_host(apps: List[Dict[str, str]], frappe_version: str) -> bool:
+    """
+    Clone apps to local ./apps directory for volume mounting
+
+    Args:
+        apps: List of app dictionaries with 'url' and 'branch'
+        frappe_version: Frappe version/branch to clone
+
+    Returns:
+        True if successful, False otherwise
+    """
+    apps_dir = Path('apps')
+
+    # Create apps directory if it doesn't exist
+    if not apps_dir.exists():
+        print_step("Creating apps directory...")
+        apps_dir.mkdir(exist_ok=True)
+        print_success("Apps directory created")
+
+    # Clone Frappe framework first
+    frappe_dir = apps_dir / 'frappe'
+    if not frappe_dir.exists():
+        print_step(f"Cloning Frappe framework ({frappe_version})...")
+        result = subprocess.run(
+            ['git', 'clone', 'https://github.com/frappe/frappe',
+             '--branch', frappe_version, '--depth', '1', str(frappe_dir)],
+            capture_output=True
+        )
+        if result.returncode == 0:
+            print_success("Frappe framework cloned")
+        else:
+            print_error("Failed to clone Frappe framework")
+            return False
+    else:
+        print_info("Frappe framework already exists, skipping clone")
+
+    # Clone each custom app
+    for app in apps:
+        url = app.get('url', '')
+        branch = app.get('branch', 'main')
+
+        # Extract app name from URL
+        app_name = url.rstrip('/').split('/')[-1].replace('.git', '')
+        app_path = apps_dir / app_name
+
+        if not app_path.exists():
+            print_step(f"Cloning {app_name} ({branch})...")
+            result = subprocess.run(
+                ['git', 'clone', url, '--branch', branch, str(app_path)],
+                capture_output=True
+            )
+            if result.returncode == 0:
+                print_success(f"{app_name} cloned")
+            else:
+                print_error(f"Failed to clone {app_name}")
+                return False
+        else:
+            print_info(f"{app_name} already exists, skipping clone")
+
+    return True
+
+
 def destroy_environment() -> bool:
     """
     Destroy all containers and volumes
@@ -607,7 +669,21 @@ Management:
     apps_json_path.write_text(json.dumps(apps, indent=2))
     print_success(f"apps.json created from {args.preset} preset")
 
-    # Step 6: Build Docker image
+    # Step 6: Clone apps to local directory
+    print()
+    print_header("Setting Up Apps")
+    print_info("Cloning apps to local directory for development...")
+    print()
+
+    if not clone_apps_to_host(apps, args.frappe_version):
+        print()
+        print_error("Failed to clone apps")
+        sys.exit(1)
+
+    print()
+    print_success("Apps cloned successfully")
+
+    # Step 7: Build Docker image
     print()
     print_header("Building Docker Image")
     print_info(f"Building with Frappe {args.frappe_version}")
