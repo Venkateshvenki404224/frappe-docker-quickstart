@@ -693,6 +693,27 @@ python start.py
 4. **Test in container** - Your changes run in the same environment as production
 5. **Commit often** - Small, focused commits are easier to manage
 
+### Building the UI
+
+When apps are mounted as volumes, you need to build the frontend assets:
+
+```bash
+# Build all apps (first time or after major changes)
+docker exec frappe_quickstart_backend bench build
+
+# Build specific app
+docker exec frappe_quickstart_backend bench build --app nano_press
+
+# Restart services after build
+docker-compose restart backend frontend
+```
+
+**When to rebuild:**
+- After cloning apps for the first time
+- After pulling major changes that affect frontend
+- After installing new apps
+- When frontend changes aren't reflecting
+
 ### App Development Commands
 
 ```bash
@@ -707,6 +728,9 @@ git pull
 
 # Install app in site
 docker exec -it frappe_quickstart_backend bench --site frontend install-app nano_press
+
+# Build UI after changes
+docker exec frappe_quickstart_backend bench build
 
 # Clear cache after changes
 docker exec -it frappe_quickstart_backend bench --site frontend clear-cache

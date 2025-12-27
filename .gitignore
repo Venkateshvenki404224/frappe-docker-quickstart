@@ -45,3 +45,6 @@ apps/
 ## LLM
 .claude/
 CLAUDE.md
+
+# Ignore Custom json 
+/presets/custom.json
